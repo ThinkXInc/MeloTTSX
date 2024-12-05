@@ -33,7 +33,10 @@ class TTS(nn.Module):
             assert torch.cuda.is_available()
 
         # config_path = 
+        print(f'config path: {config_path}')
+        print(f'language: {language}')
         hps = load_or_download_config(language, use_hf=use_hf, config_path=config_path)
+        print(f'hps: {hps}')
 
         num_languages = hps.num_languages
         num_tones = hps.num_tones

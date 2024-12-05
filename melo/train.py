@@ -167,6 +167,8 @@ def run():
     net_d = DDP(net_d, device_ids=[rank], find_unused_parameters=True)
     
     pretrain_G, pretrain_D, pretrain_dur = load_pretrain_model()
+    # Add this line to set hps.pretrain_G from your config
+    hps.pretrain_G = getattr(hps.train, "pretrained_checkpoint_path", None)
     hps.pretrain_G = hps.pretrain_G or pretrain_G
     hps.pretrain_D = hps.pretrain_D or pretrain_D
     hps.pretrain_dur = hps.pretrain_dur or pretrain_dur
