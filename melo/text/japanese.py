@@ -367,6 +367,7 @@ _NO_YOMI_TOKENS = set(list("「」『』―（）［］[]"))
 _TAGGER = MeCab.Tagger()
 
 
+# TODO: replace to our parser
 def text2kata(text: str) -> str:
     parsed = _TAGGER.parse(text)
     res = []
@@ -544,6 +545,7 @@ kakasi.setMode("J", "K")  # Chinese to Katakana
 kakasi.setMode("H", "K")  # Hiragana to Katakana
 # Convert Chinese characters to Katakana
 conv = kakasi.getConverter()
+# TODO: replace to kana
 
 def text_normalize(text):
     res = unicodedata.normalize("NFKC", text)

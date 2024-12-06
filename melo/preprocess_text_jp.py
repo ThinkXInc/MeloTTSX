@@ -55,8 +55,50 @@ def main(
         new_symbols = []
         for line in tqdm(open(metadata, encoding="utf-8").readlines()):
             try:
-                utt, spk, language, text = line.strip().split("|")
-                norm_text, phones, tones, word2ph, bert = clean_text_bert(text, language, device='cuda:0')
+                audio_path, spk, language, text = line.strip().split("|")
+
+                # Extract transcript for jsut, moraspeech
+                print('\n')
+                print(audio_path)
+                if spk == "JP-jsut":
+                    # speaker JP-jsut
+                    #   audio_path: /disk1/jsut/{jsut_category}/wav/{jsut_category}_{i}.wav
+                    #   transcript_path: /disk1/jsut/{jsut_category}/transcripts/{jsut_category}_{i}.txt
+                    #   (ex)
+                    #       audio_path: /disk1/jsut/basic5000/wav/BASIC5000_0001.wav
+                    #       transcript_path: /disk1/jsut/basic5000/transcripts/BASIC5000_0001.txt
+                    jsut_category, file_id = audio_path.split("/")[-3], audio_path.split("/")[-1].split("_")[1].split(".")[0]
+                    print('-----------------')
+                    print(jsut_category)
+                    print(file_id)
+                    print('-----------------')
+                    transcript_path = f"/disk1/jsut/{jsut_category}/transcripts/{jsut_category.upper()}_{file_id}.txt"
+                elif spk == "JP-moraspeech":
+                    # speaker JP-moraspeech
+                    # jsut
+                    #   audio_path: /disk1/moraspeech/wavs/jsut/JSUT_{i}.wav
+                    #   transcript_path: /disk1/jsut/basic5000/BASIC5000_{i}.txt
+                    # original
+                    #   audio_path: /disk1/moraspeech/wavs/original/{i}.wav
+                    #   transcript_path: /disk1/moraspeech/kana_transcripts/original/{i}.txt
+                    if "jsut" in audio_path:
+                        file_id = audio_path.split("/")[-1].split("_")[1].split(".")[0]
+                        transcript_path = f"/disk1/jsut/basic5000/BASIC5000_{file_id}.txt"
+                    else:
+                        file_id = audio_path.split("/")[-1].split(".")[0]
+                        transcript_path = f"/disk1/moraspeech/kana_transcripts/original/{file_id}.txt"
+                    print('-----------------')
+                    print(file_id)
+                    print(transcript_path)
+                    print('-----------------')
+ 
+
+                with open(transcript_path, "r", encoding="utf-8") as f:
+                    transcript = f.read().strip()
+
+                print(f"Transcript: {transcript} for audio path {audio_path}")
+
+                norm_text, phones, tones, word2ph, bert = clean_text_bert(transcript, language, device='cuda:0')
                 for ph in phones:
                     if ph not in symbols and ph not in new_symbols:
                         new_symbols.append(ph)
@@ -69,7 +111,7 @@ def main(
                 assert len(phones) == sum(word2ph)
                 out_file.write(
                     "{}|{}|{}|{}|{}|{}|{}\n".format(
-                        utt,
+                        audio_path,
                         spk,
                         language,
                         norm_text,
@@ -78,7 +120,7 @@ def main(
                         " ".join([str(i) for i in word2ph]),
                     )
                 )
-                bert_path = utt.replace(".wav", ".bert.pt")
+                bert_path = audio_path.replace(".wav", ".bert.pt")
                 os.makedirs(os.path.dirname(bert_path), exist_ok=True)
                 torch.save(bert.cpu(), bert_path)
             except Exception as error:
